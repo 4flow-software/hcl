@@ -313,6 +313,15 @@ func spaceAfterToken(subject, before, after *Token) bool {
 			// e.g. foo {} rather than foo { }
 			return false
 		}
+		// for jinja {%: subject.Type = {, before = irrelevant, after = % => false
+		if subject.Type == hclsyntax.TokenOBrace && after.Type == hclsyntax.TokenPercent {
+			return false
+		}
+
+		// for jinja %}: subject.Type = %, before = irrelevant, after = % => false
+		if subject.Type == hclsyntax.TokenPercent && after.Type == hclsyntax.TokenCBrace {
+			return false
+		}
 		return true
 
 	// In the unlikely event that an interpolation expression is just
