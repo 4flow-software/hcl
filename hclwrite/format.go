@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package hclwrite
@@ -304,7 +304,16 @@ func spaceAfterToken(subject, before, after *Token) bool {
 			return true
 		}
 
-	case subject.Type == hclsyntax.TokenOBrace || after.Type == hclsyntax.TokenCBrace:
+	case subject.Type == hclsyntax.TokenOBrace || after.Type == hclsyntax.TokenCBrace || before.Type == hclsyntax.TokenOBrace || subject.Type == hclsyntax.TokenMinus:
+
+		// for jinja {%-: subject.Type=%, before={, after=- => false
+		if before.Type == hclsyntax.TokenOBrace && subject.Type == hclsyntax.TokenPercent && after.Type == hclsyntax.TokenMinus {
+			return false
+		}
+		// for jinja -%}: subject.Type=-, before=irrelevant, after=% => false
+		if subject.Type == hclsyntax.TokenMinus && after.Type == hclsyntax.TokenPercent {
+			return false
+		}
 		// Unlike other bracket types, braces have spaces on both sides of them,
 		// both in single-line nested blocks foo { bar = baz } and in object
 		// constructor expressions foo = { bar = baz }.
